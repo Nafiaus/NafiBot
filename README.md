@@ -1,6 +1,11 @@
 # NafiBot
 This is a bot I'm creating for my twitch chat in C#. I'll be updating this as I add more to it.
 
+---------------------------------------------------
+
+FUTURE IDEAS
+
+I want to add a logging method, so I can add a message history function so people can grab how many messages they have sent, or have a leaderboard.
 
 ---------------------------------------------------
 
