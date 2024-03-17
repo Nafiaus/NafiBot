@@ -61,9 +61,6 @@ namespace NafiBot
                     case "!getmycolor":
                         GetChatterColor(chatMessage);
                         break;
-                    case "!whatsmytype":
-                        GetUserType(chatMessage);
-                        break;
                     case "!commands":
                         GiveCommands(chatMessage);
                         break;
@@ -75,22 +72,16 @@ namespace NafiBot
             // Checks to see if chatter is first time chatter
             static void GetFirstTime(TwitchChatMessage chatMessage)
             {
-                if(chatMessage.IsFirstMessage == "True")
+                if (chatMessage.IsFirstMessage == "True")
                 {
                     bot.Write($"Welcome {chatMessage.Sender} to the stream! I hope you enjoy your stay. You can get a list of commands by using \"!commands\"");
                 }
             }
 
-            // Gets User Type
-            static void GetUserType(TwitchChatMessage chatMessage)
-            {
-                bot.Write($"{chatMessage.Sender} your user type is {chatMessage.UserType}.");
-            }
-
             // Give Commands
             static void GiveCommands(TwitchChatMessage chatMessage)
             {
-                string line = chatMessage.Sender + " you can get a list of commands here: [YOUR COMMANDS LINK HERE]"; // CHANGE YOUR LINK TO COMMANDS
+                string line = chatMessage.Sender + " you can get a list of commands here: https://discord.gg/Z5ZbqW4h9u";
                 bot.Write(line);
             }
             // Deez Nuts Yo
@@ -110,7 +101,7 @@ namespace NafiBot
             // This function plugs my Discord
             static void PlugDiscord(TwitchChatMessage chatMessage)
             {
-                string line = "THE DISCORD LINK! ---> [YOUR DISCORD HERE] <--- click to join! Make sure to react \"Thumbs Up\" in the Rules!"; // CHANGE DISCORD LINK
+                string line = "THE DISCORD LINK! ---> https://discord.gg/zCFh23dXvW <--- click to join! Make sure to react \"Thumbs Up\" in the Rules!";
                 bot.Write(line);
             }
             // This function is a Troll Function
@@ -130,7 +121,7 @@ namespace NafiBot
             // This function is for plugging my YouTube Channel
             static void PlugYT(TwitchChatMessage chatMessage)
             {
-                string line = "Subscribe to My YouTube! [YOUR YOUTUBE CHANNEL HERE]"; // CHANGE YOUTUBE LINK
+                string line = "Subscribe to My YouTube! https://m.youtube.com/channel/UCvDQj2yZ-yHTFheHlSMQang";
                 bot.Write(line);
             }
 
@@ -208,17 +199,10 @@ namespace NafiBot
                 }
                 else if (chatMessage.IsModerator == "True")
                 {
-                    if (chatMessage.UserType == "global_mod")
-                    {
-                        bot.Write($"Holy shit boys, {chatMessage.Sender} is a Global Mod! BEST BEHAVOIR");
-                    }
-                    else
-                    {
-                        bot.Write($"{chatMessage.Sender} you are a moderator! <3");
-                    }
+                    bot.Write($"{chatMessage.Sender} you are a moderator! <3");
                 }
             }
-            
+
             // This function grabs the mod status of the sender
             static void GetSubStatus(TwitchChatMessage chatMessage)
             {
