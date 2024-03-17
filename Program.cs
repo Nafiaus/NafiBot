@@ -64,6 +64,9 @@ namespace NafiBot
                     case "!commands":
                         GiveCommands(chatMessage);
                         break;
+                //  case "!new command:":
+                //      CommandMethod();
+                //      break;
                     default:
                         break;
                 }
@@ -228,6 +231,7 @@ namespace NafiBot
                     bot.Write($"{chatMessage.Sender} you are a Twitch Turbo User!");
                 }
             }
+            // add new command methods here \/
         }
     }
 }
