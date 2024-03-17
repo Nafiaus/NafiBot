@@ -25,8 +25,6 @@ start :: Daddy chill... ❤️
 
 !getmycolor :: $(touser) your chat color is $(chat color)
 
-!whatsmytype :: $(touser) your user type is $(user type)
-
 !discord :: THE DISCORD LINK! ---> https://discord.gg/zCFh23dXvW <--- click to join! Make sure to react "Thumbs Up" in the Rules!
 
 !yt :: Subscribe to My YouTube! https://m.youtube.com/channel/UCvDQj2yZ-yHTFheHlSMQang
