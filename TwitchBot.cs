@@ -54,22 +54,48 @@ namespace Nafi.Twitch
                 if (!chatRaw.Contains("PRIVMSG")) continue;
                 break;
             }
-            int flagOffset = 3;
             // Parse Raw Message into words by the ';' character
             string[] flags = chatRaw.Split(';');
 
-            if (flags[2].Contains("client-nonce"))
+            string colorRaw = "";
+            string moderatorRaw = "";
+            string subscriberRaw = "";
+            string turboRaw = "";
+            string firstMsgRaw = "";
+            string messageRaw = "";
+
+
+            for (int i = 0; i < flags.Length; i++)
             {
-                flagOffset = 0;
-            }
-            else if (flags[2].Contains("color"))
-            {
-                flagOffset = 1;
+                if (flags[i].Contains("color="))
+                {
+                    colorRaw = flags[i];
+                }
+                if (flags[i].Contains("mod="))
+                {
+                    moderatorRaw = flags[i];
+                }
+                if (flags[i].Contains("turbo="))
+                {
+                    turboRaw = flags[i];
+                }
+                if (flags[i].Contains("subscriber="))
+                {
+                    subscriberRaw = flags[i];
+                }
+                if (flags[i].Contains("first-msg="))
+                {
+                    firstMsgRaw = flags[i];
+                }
+                if (flags[i].Contains("PRIVMSG"))
+                {
+                    messageRaw = flags[i];
+                }
             }
 
             // Get Sender Color
-            int colorStartIndex = flags[3 - flagOffset].IndexOf("=") + 1;
-            string chatColorHex = flags[3 - flagOffset].Substring(colorStartIndex);
+            int colorStartIndex = colorRaw.IndexOf("=") + 1;
+            string chatColorHex = colorRaw.Substring(colorStartIndex);
             string chatColor;
             switch (chatColorHex)
             {
@@ -124,9 +150,9 @@ namespace Nafi.Twitch
             }
 
             // Get Subscriber Status
-            int subcriberStartIndex = flags[12 - flagOffset].IndexOf("=") + 1;
+            int subcriberStartIndex = subscriberRaw.IndexOf("=") + 1;
             string chatSubscriber;
-            string subscriberBoolean = flags[12 - flagOffset].Substring(subcriberStartIndex);
+            string subscriberBoolean = subscriberRaw.Substring(subcriberStartIndex);
             if (subscriberBoolean == "0")
             {
                 chatSubscriber = "False";
@@ -141,9 +167,9 @@ namespace Nafi.Twitch
             }
 
             // Get Mod Status
-            int modStartIndex = flags[9 - flagOffset].IndexOf("=") + 1;
+            int modStartIndex = moderatorRaw.IndexOf("=") + 1;
             string chatMod;
-            string modBoolean = flags[9 - flagOffset].Substring(modStartIndex);
+            string modBoolean = moderatorRaw.Substring(modStartIndex);
             if (modBoolean == "0")
             {
                 chatMod = "False";
@@ -158,9 +184,9 @@ namespace Nafi.Twitch
             }
 
             // Get Turbo Status
-            int turboStartIndex = flags[14 - flagOffset].IndexOf("=") + 1;
+            int turboStartIndex = turboRaw.IndexOf("=") + 1;
             string chatTurbo;
-            string turboBoolean = flags[14 - flagOffset].Substring(turboStartIndex);
+            string turboBoolean = turboRaw.Substring(turboStartIndex);
             if (turboBoolean == "0")
             {
                 chatTurbo = "False";
@@ -174,27 +200,10 @@ namespace Nafi.Twitch
                 chatTurbo = "Error";
             }
 
-            // Get Returning Chatter Status
-            int returningChatterStartIndex = flags[10 - flagOffset].IndexOf("=") + 1;
-            string chatReturningChatter;
-            string returningChatterBoolean = flags[10 - flagOffset].Substring(returningChatterStartIndex);
-            if (returningChatterBoolean == "0")
-            {
-                chatReturningChatter = "False";
-            }
-            else if (returningChatterBoolean == "1")
-            {
-                chatReturningChatter = "True";
-            }
-            else
-            {
-                chatReturningChatter = "Error";
-            }
-
             // Get First Message Status
-            int firstMessageStartIndex = flags[6 - flagOffset].IndexOf("=") + 1;
+            int firstMessageStartIndex = firstMsgRaw.IndexOf("=") + 1;
             string chatFirstMessage;
-            string firstMessageBoolean = flags[6 - flagOffset].Substring(firstMessageStartIndex);
+            string firstMessageBoolean = firstMsgRaw.Substring(firstMessageStartIndex);
             if (firstMessageBoolean == "0")
             {
                 chatFirstMessage = "False";
@@ -207,51 +216,21 @@ namespace Nafi.Twitch
             {
                 chatFirstMessage = "Error";
             }
-
-            // Get Sender Message ID
-            int msgIdStartIndex = flags[8 - flagOffset].IndexOf("=") + 1;
-            string chatMsgId = flags[8 - flagOffset].Substring(msgIdStartIndex);
-
-            // Get Sender Name
-            int nameStartIndex = flags[4 - flagOffset].IndexOf("=") + 1;
-            string chatSender = flags[4 - flagOffset].Substring(nameStartIndex);
-
-            // Get User ID
-            int uidStartIndex = flags[15 - flagOffset].IndexOf("=") + 1;
-            string chatUID = flags[15 - flagOffset].Substring(uidStartIndex);
+            // nafiaus.tm
+            int nameStartIndex = messageRaw.IndexOf("@") + 1;
+            int nameEndIndex = messageRaw.IndexOf(":") - 4;
+            string chatSender = messageRaw.Substring(nameStartIndex, nameEndIndex);
 
             // Get Message
-            int messageIndexStart = flags[16 - flagOffset].IndexOf("#");
-            string chatMessage = flags[16 - flagOffset].Substring((messageIndexStart + channel.Length) + 3);
+            int messageIndexStart = messageRaw.IndexOf("#") + 1;
+            string chatMessage = messageRaw.Substring(messageIndexStart + channel.Length + 2);
+            Console.WriteLine(messageRaw);
+            Console.WriteLine(chatMessage);
+            Console.WriteLine(messageIndexStart);
 
-            // Get Sender Type
-            int userTypeStartIndex = flags[16 - flagOffset].IndexOf("=") + 1;
-            int userTypeEndIndex = flags[16 - flagOffset].IndexOf(":") - 1;
-            int userTypeLength = userTypeEndIndex - userTypeStartIndex;
-            string chatUserTypeRaw = flags[16 - flagOffset].Substring(userTypeStartIndex, userTypeLength);
-            string chatUserType;
-            switch (chatUserTypeRaw)
-            {
-                case "":
-                    chatUserType = "Normal User";
-                    break;
-                case "admin":
-                    chatUserType = "Twitch Administrator";
-                    break;
-                case "global_mod":
-                    chatUserType = "Global Moderator";
-                    break;
-                case "staff":
-                    chatUserType = "Twitch Employee";
-                    break;
-                default:
-                    chatUserType = "Error";
-                    break;
-            }
-
-            return new TwitchChatMessage(chatRaw, chatUserType, chatColor, chatMsgId, chatMod, chatSubscriber, chatTurbo, chatUID, chatReturningChatter, chatFirstMessage, chatSender, chatMessage);
+            return new TwitchChatMessage(chatRaw, chatColor, chatMod, chatSubscriber, chatTurbo, chatFirstMessage, chatSender, chatMessage);
         }
-    
+
 
         // Write a message to Twitch chat using bot
         public bool Write(string message)
@@ -324,33 +303,27 @@ namespace Nafi.Twitch
     public class TwitchChatMessage
     {
         public readonly string Raw;
-        public readonly string UserType;
         public readonly string Color;
-        public readonly string MessageId;
         public readonly string IsModerator;
         public readonly string IsSubscriber;
         public readonly string IsTurbo;
-        public readonly string UserId;
-        public readonly string IsReturningChatter;
         public readonly string IsFirstMessage;
         public readonly string Sender;
         public readonly string Message;
 
-        public TwitchChatMessage(string raw, string userType, string color, string msgId, string mod, string subscriber, string turbo, string uid, string returningChatter, string firstMessage, string sender, string message)
+        public TwitchChatMessage(string raw, string color, string mod, string subscriber, string turbo, string firstMessage, string sender, string message)
         {
             this.Raw = raw;
-            this.UserType = userType;
             this.Color = color;
-            this.MessageId = msgId;
             this.IsModerator = mod;
             this.IsSubscriber = subscriber;
             this.IsTurbo = turbo;
-            this.UserId = uid;
-            this.IsReturningChatter = returningChatter;
             this.IsFirstMessage = firstMessage;
             this.Sender = sender;
             this.Message = message;
         }
     }
+}
+
 }
 
