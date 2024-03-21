@@ -7,6 +7,10 @@ FUTURE IDEAS
 
 I want to add a logging method, so I can add a message history function so people can grab how many messages they have sent, or have a leaderboard.
 
+IDEAS ADDED INSTEAD OF A LOGGING METHOD
+- Chat GPT
+- Merged 3 useless function into 1 useless function
+
 ---------------------------------------------------
 
 CHAT COMMANDS
@@ -17,13 +21,9 @@ yo ::  $(touser) Yo Deez Nuts in your mouth, Got Em' Kappa
 
 start :: Daddy chill... ❤️
 
-!nafibot :: Ask Nafibot anything (using Chat GPT 4 Turbo)
+!nafibot [thinker||sarcastic||rude] :: Ask Nafibot anything (using Chat GPT 4 Turbo) [secondary command is not needed]
 
-!amimod :: $(touser) you are $(mod status)
-
-!amisub :: $(touser) you are $(sub status)
-
-!amiturbo :: $(touser) you are $(turbo status)
+!mystatus [mod||sub||turbo] :: Will return your status
 
 !getmycolor :: $(touser) your chat color is $(chat color)
 
