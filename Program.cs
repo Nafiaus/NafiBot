@@ -1,12 +1,15 @@
+using OpenAI_API;
 using Nafi.Twitch;
 
 namespace NafiBot
 {
     class Program
     {
+        static string OpenAI_API_Key = [OPENAI KEY HERE]; // CHANGE YOUR OPENAI API KEY
         static string oauth = [OAUTH TOKEN HERE]; // CHANGE YOUR OAUTH TOKEN
         static string channel = [YOUR CHANNEL HERE]; // CHANGE YOUR CHANNEL NAME
         static string nick = [BOT NICKNAME HERE]; // CHANGE YOUR BOT NICKNAME
+        static string assistantRules = "Your name is Nafibot. You are a friendly Twitch Moderator who's goal is to give the most facutal information out there. You also LOVE Supreme Pizza WITH PINEAPPLES ON IT."; // you can change this to whatever
 
         static TwitchBot bot = new TwitchBot(oauth, channel, nick);
 
@@ -26,7 +29,9 @@ namespace NafiBot
             static void CheckCommand(TwitchChatMessage chatMessage)
             {
                 string msg = chatMessage.Message;
-                switch (msg)
+                string[] words = msg.Split(' ');
+                
+                switch (words[0])
                 {
                     case "yo":
                         DeezNutsYo(chatMessage);
@@ -60,6 +65,9 @@ namespace NafiBot
                         break;
                     case "!getmycolor":
                         GetChatterColor(chatMessage);
+                        break;
+                    case "!nafibot": // you can change this
+                        AskGPT(chatMessage);
                         break;
                     case "!commands":
                         GiveCommands(chatMessage);
@@ -231,6 +239,31 @@ namespace NafiBot
                     bot.Write($"{chatMessage.Sender} you are a Twitch Turbo User!");
                 }
             }
+
+            // This function talks to Chat GPT on behalf of your twitch chat
+            static async Task AskGPT(TwitchChatMessage chatMessage)
+            {
+                string msg = chatMessage.Message;
+                string[] words = msg.Split(' ');
+                List<string> wordList = words.ToList();
+                wordList.RemoveAt(0);
+                string prompt = string.Join(" ", wordList);
+                Console.WriteLine(prompt);
+            
+                var api = new OpenAI_API.OpenAIAPI(OpenAI_API_Key);
+                var chat = api.Chat.CreateConversation();
+                chat.Model = "gpt-4-turbo-preview";
+                chat.RequestParameters.Temperature = 1;
+            
+                chat.AppendSystemMessage(assistantRules);
+                chat.AppendUserInput("What's your favorite food?");
+                chat.AppendExampleChatbotOutput("I love Pepperoni Pizza with Pineapples on it! What about you?");
+                chat.AppendUserInput(prompt);
+            
+                string response = await chat.GetResponseFromChatbotAsync();
+                bot.Write($"{response}");
+            }
+            
             // add new command methods here \/
         }
     }
