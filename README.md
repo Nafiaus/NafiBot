@@ -17,6 +17,8 @@ yo ::  $(touser) Yo Deez Nuts in your mouth, Got Em' Kappa
 
 start :: Daddy chill... ❤️
 
+!nafibot :: Ask Nafibot anything (using Chat GPT 4 Turbo)
+
 !amimod :: $(touser) you are $(mod status)
 
 !amisub :: $(touser) you are $(sub status)
