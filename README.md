@@ -19,6 +19,48 @@ IDEAS ADDED INSTEAD OF A LOGGING METHOD
 
 ---------------------------------------------------
 
+CAMERA COMMANDS
+
+---------------------------------------------------
+
+!laser :: shoots a laser for 5 seconds
+
+!camreset :: resets the camera to normal
+
+!left :: moves camera left 5°
+
+!right :: moves camera right 5°
+
+!down :: moves camera down 5°
+
+!up :: moves camera up 5°
+
+!white :: turns the camera light white
+
+!red :: turns the camera light red
+
+!yellow :: turns the camera light yellow
+
+!green :: turns the camera light green
+
+!blue :: turns the camera light blue
+
+!cyan :: turns the camera light cyan
+
+!magenta :: turns the camera light magenta
+
+!lightoff :: turns off the camera light
+
+!lighton :: turns on the camera light
+
+!brightnessup :: turns up the brightness by 10
+
+!brightnessdown :: turns down the brightness by 10
+
+!flashbang :: "flashbangs" me.
+
+---------------------------------------------------
+
 CHAT COMMANDS
 
 ---------------------------------------------------
