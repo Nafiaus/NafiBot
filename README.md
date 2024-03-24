@@ -1,5 +1,5 @@
 # NafiBot
-This is a bot I'm creating for my twitch chat in C#. I'll be updating this as I add more to it.
+This is a bot I'm creating for my twitch chat in C#, C++, and JavaScript. I'll be updating this as I add more to it.
 
 ---------------------------------------------------
 
@@ -10,6 +10,7 @@ I want to add a logging method, so I can add a message history function so peopl
 IDEAS ADDED INSTEAD OF A LOGGING METHOD
 - Chat GPT
 - Merged 3 useless function into 1 useless function
+- Enabled YouTube chat the ablility to use camera controls (aka learned javascript & node.js) One second... I LEARNED A NEW LANGUAGE INSTEAD OF ADDING LOGGING METHOD
 
 ---------------------------------------------------
 
