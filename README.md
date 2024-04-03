@@ -1,6 +1,8 @@
 # NafiBot
 This is a bot I'm creating for my twitch chat in C#, C++, and JavaScript. I'll be updating this as I add more to it.
 
+I'm removing all javascript and python. they suck IMO I'll update it soon.
+
 Currently to run it you need to go live on youtube, next open cmd and go to server.js root dir and run "node server.js", afterwards go to the website http://localhost:3000 and click the buttons "Authorize", "Get Active Chat", "Start Tracking Chat" in that order, then run the C# application Nafibot.exe and you are set up!
 
 How it works:
