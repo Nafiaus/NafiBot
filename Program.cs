@@ -1,26 +1,28 @@
+using System.Text;
 using Nafi.OpenAI;
+using Nafi.Secrets;
 using Nafi.Twitch;
-using NAudio.Wave;
-using System.Diagnostics.Contracts;
-using System.Diagnostics.Tracing;
 using WindowsInput;
 using WindowsInput.Native;
+
 class Program
 {
-    static string oauth = "OAUTH";
+    static Keys Key = new Keys();
+
+    static string oauth = Key.Twitch;
     static string channel = "nafiaus";
     static string nick = "Nafibot";
-    static string gptResponsePointerFile = @".\voices\responsepointer.txt";
-    static string debugFile = @".\data\debug_log.txt";
+    static string QuotesFile = @".\data\quotes.txt";
+    static string gptResponsePointerFile = @".\data\responsepointer.txt";
     static string dataFile = @".\data\flashbang.dat";
+    static string logFile = @".\data\log.txt";
 
     static bool isFirstFlashbang = true;
-    static bool isFirstSpawn = false;
 
     static int gptResponsePointer = 0;
     static int flashbangCounter = 0;
 
-    static bool controlMe = true;
+    static bool controlMe = false;
 
     static TwitchBot bot = new TwitchBot(oauth, channel, nick);
     static OpenAiService ai = new OpenAiService();
@@ -63,7 +65,12 @@ class Program
             if (chatMessage != null)
             {
                 log("Recieved Twitch Chat Message.");
-                GetFirstTime(chatMessage);
+
+                if (chatMessage.IsFirstMessage == "True")
+                {
+                    bot.Write($"Welcome {chatMessage.Sender} to the stream! I hope you enjoy your stay. You can get a list of commands by using \"!commands\"");
+                }
+
                 CheckCommand(chatMessage);
             }
         }
@@ -72,31 +79,29 @@ class Program
             log($"Checking for Commands in \"{chatMessage.Message}\" from \"{chatMessage.Sender}\".");
             string msg = chatMessage.Message;
             string[] words = msg.Split(' ');
-            switch (words[0])
+            switch (words[0].ToLower())
             {
-                case "!wzid":
-                    WarzoneMobileID(chatMessage);
-                    break;
                 case "yo":
-                    DeezNutsYo(chatMessage);
+                    bot.Write($"{chatMessage.Sender} Yo Deez Nuts in your mouth, Got Em\' Kappa");
                     break;
                 case "start":
-                    DaddyChill(chatMessage);
+                    bot.Write("Daddy Chill...");
                     break;
                 case "!discord":
-                    PlugDiscord(chatMessage);
+                    bot.Write("THE DISCORD LINK! ---> https://discord.gg/zCFh23dXvW <--- click to join! Make sure to react \"Thumbs Up\" in the Rules!");
                     break;
                 case "!yt":
-                    PlugYT(chatMessage);
+                    bot.Write("Subscribe to My YouTube! https://m.youtube.com/channel/UCvDQj2yZ-yHTFheHlSMQang");
                     break;
                 case "!time":
-                    GetTime(chatMessage);
+                    DateTime now = DateTime.Now;
+                    bot.Write(now.ToString());
                     break;
                 case "!claim":
-                    ClaimNuts(chatMessage);
+                    bot.Write($"{chatMessage.Sender} Has Claimed Deez Nuts \U0001f95c Got Em\'");
                     break;
                 case "!activate":
-                    ActivateNuts(chatMessage);
+                    bot.Write($"{chatMessage.Sender} Has Activated Deez Nuts \U0001f95c Got Em\'");
                     break;
                 case "!mystatus": // requires user input "sub" "mod" "turbo"
                     GetStatus(chatMessage);
@@ -124,258 +129,164 @@ class Program
                     bot.Write($"Thanks to the flashbangs, {flashbangCounter} little cute puppies have been ruthlessly murdered... I hope you can live with yourself!");
                     break;
                 case "!commands":
-                    GiveCommands(chatMessage);
+                    bot.Write($"{chatMessage.Sender} you can get a list of commands here: https://discord.gg/Z5ZbqW4h9u");
                     break;
                 case "!controlme":
-                    GiveControls(chatMessage);
+                    bot.Write($"{chatMessage.Sender} you can move me up with \"!w\", down with \"!s\", left with \"!a\", or right with \"!d\". Shoot my gun with \"!leftclick\", aim with \"!rightclick\". Switch weapons[Fortnite] with \"!1-5\" for melee \"!f\"");
                     break;
-                case "!activateControlMe":
+                case "!activatecontrol":
                     if (chatMessage.Sender.ToLower() == "nafiaus" || chatMessage.IsModerator == "true")
                     {
+                        bot.Write($"Control Me has been activated!");
                         controlMe = true;
                     }
                     break;
-                case "!deactivateControlMe":
+                case "!deactivatecontrol":
                     if (chatMessage.Sender.ToLower() == "nafiaus" || chatMessage.IsModerator == "true")
                     {
+                        bot.Write($"Control Me has been deactivated!");
                         controlMe = false;
                     }
+                    break;
+                case "!sus":
+                    GetSussy(chatMessage);
+                    break;
+                case "!daddy":
+                    bot.Write($"Nafiaus is now {chatMessage.Sender}'s daddy!");
+                    break;
+                case "!rank":
+                    bot.Write($"{chatMessage.Sender} rank these NUTZ HA GOTTEM");
+                    break;
+                case "nightbot":
+                    bot.Write($"HEY {chatMessage.Sender}, don't talk to that fucking asshole...");
+                    break;
+                case "@nightbot":
+                    bot.Write($"HEY {chatMessage.Sender}, don't @ fucking nightbot. Dude is a simpleton");
+                    break;
+                case "fuck":
+                    bot.Write($"Nah fuck you {chatMessage.Sender}");
+                    break;
+                case "!createquote":
+                    CreateQuote(chatMessage);
+                    break;
+                case "!getquote":
+                    GetQuote(chatMessage);
                     break;
                 default:
                     break;
             }
-            if (controlMe)
+            ControlMe(chatMessage);
+        }
+
+        static void GetQuote(TwitchChatMessage chatMessage)
+        {
+            try
             {
-                switch (words[0].ToLower())
+                if (!File.Exists(QuotesFile))
                 {
-                    case "!up":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_W);
-                        Thread.Sleep(100);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_W);
-                        break;
-                    case "!down":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_S);
-                        Thread.Sleep(100);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_S);
-                        break;
-                    case "!right":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_D);
-                        Thread.Sleep(100);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_D);
-                        break;
-                    case "!left":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_A);
-                        Thread.Sleep(100);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_A);
-                        break;
-                    case "!shift":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.SHIFT);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.SHIFT);
-                        break;
-                    case "!control":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.LCONTROL);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.LCONTROL);
-                        break;
-                    case "!spacebar":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.SPACE);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.SPACE);
-                        break;
-                    case "!1":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_1);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_1);
-                        break;
-                    case "!2":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_2);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_2);
-                        break;
-                    case "!3":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_3);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_3);
-                        break;
-                    case "!4":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_4);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_4);
-                        break;
-                    case "!5":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_5);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_5);
-                        break;
-                    case "!6":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_6);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_6);
-                        break;
-                    case "!7":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_7);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_7);
-                        break;
-                    case "!8":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_8);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_8);
-                        break;
-                    case "!9":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_9);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_9);
-                        break;
-                    case "!0":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_0);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_0);
-                        break;
-                    case "!a":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_A);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_A);
-                        break;
-                    case "!emote":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_B);
-                        Thread.Sleep(100);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_B);
-                        break;
-                    case "!c":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_C);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_C);
-                        break;
-                    case "!d":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_D);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_D);
-                        break;
-                    case "!e":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_E);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_E);
-                        break;
-                    case "!f":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_F);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_F);
-                        break;
-                    case "!g":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_G);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_G);
-                        break;
-                    case "!h":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_H);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_H);
-                        break;
-                    case "!i":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_I);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_I);
-                        break;
-                    case "!j":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_J);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_J);
-                        break;
-                    case "!k":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_K);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_K);
-                        break;
-                    case "!l":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_L);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_L);
-                        break;
-                    case "!m":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_M);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_M);
-                        break;
-                    case "!n":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_N);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_N);
-                        break;
-                    case "!o":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_O);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_O);
-                        break;
-                    case "!p":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_P);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_P);
-                        break;
-                    case "!q":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_Q);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_Q);
-                        break;
-                    case "!r":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_R);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_R);
-                        break;
-                    case "!s":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_S);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_S);
-                        break;
-                    case "!t":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_T);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_T);
-                        break;
-                    case "!u":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_U);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_U);
-                        break;
-                    case "!v":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_V);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_V);
-                        break;
-                    case "!w":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_W);
-                        Thread.Sleep(1000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_W);
-                        break;
-                    case "!x":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_X);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_X);
-                        break;
-                    case "!y":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_Y);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_Y);
-                        break;
-                    case "!z":
-                        inSim.Keyboard.KeyDown(VirtualKeyCode.VK_Z);
-                        Thread.Sleep(3000);
-                        inSim.Keyboard.KeyUp(VirtualKeyCode.VK_Z);
-                        break;
-                    case "!leftclick":
-                        inSim.Mouse.LeftButtonDown();
-                        Thread.Sleep(3000);
-                        inSim.Mouse.LeftButtonUp();
-                        break;
-                    case "!rightclick":
-                        inSim.Mouse.RightButtonDown();
-                        Thread.Sleep(3000);
-                        inSim.Mouse.RightButtonUp();
-                        break;
-                    default:
-                        break;
+                    bot.Write($"Sorry {chatMessage.Sender} No quotes are recorded :( use \"!createquote something someone said in chat\" to create a quote!");
                 }
+                else
+                {
+                    using (StreamReader sr = new StreamReader(QuotesFile))
+                    {
+                        string[] quotesArray = { };
+                        List <string> quotes = quotesArray.ToList();
+                        int quoteCount = 0;
+
+                        foreach (string line in File.ReadLines(QuotesFile))
+                        {
+                            quotes.Add(line);
+                            quoteCount++;
+                        }
+                        quotesArray = quotes.ToArray();
+
+                        Random random = new Random();
+                        int quotePicked = random.Next(0, quotesArray.Length - 1);
+                        Console.WriteLine(quotePicked);
+                        bot.Write(quotesArray[quotePicked]);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+        static string RemoveCommand(string raw)
+        {
+            string[] stringArray = raw.Split(' ');
+            List<string> stringList = stringArray.ToList();
+            stringList.RemoveAt(0);
+            stringArray = stringList.ToArray();
+            string result = string.Join(' ', stringArray);
+
+            return result;
+        }
+
+        static void CreateQuote(TwitchChatMessage chatMessage)
+        {
+            string quote = RemoveCommand(chatMessage.Message);
+
+            if (!File.Exists(QuotesFile))
+            {
+                try
+                {
+                    using (FileStream fs = File.Create(QuotesFile))
+                    {
+                        byte[] info = new UTF8Encoding(true).GetBytes(quote + '\n');
+                        fs.Write(info, 0, info.Length);
+                    }
+                }
+                catch (Exception e) 
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            }
+            else
+            {
+                using (StreamWriter sw = File.AppendText(QuotesFile))
+                {
+                    sw.WriteLine(quote + '\n');
+                }
+            }
+        }
+
+        static void GetSussy(TwitchChatMessage chatMessage)
+        {
+            Random random = new Random();
+            int susNum = random.Next(0, 100);
+
+            switch (susNum)
+            {
+                case 0:
+                    bot.Write($"@{chatMessage.Sender} don't worry, you're {susNum}% sus! Go do some none sussy stuff! *whatever that is...*");
+                    break;
+                case < 25:
+                    bot.Write($"@{chatMessage.Sender} you enjoy some light sus action, at {susNum}% though you can't be completely trusted!");
+                    break;
+                case < 50:
+                    bot.Write($"@{chatMessage.Sender} yoooo getting slightly sussy there arentcha you fussy sussy wussy {susNum}%");
+                    break;
+                case < 69:
+                    bot.Write($"@{chatMessage.Sender} Heh get down with {susNum}% sus");
+                    break;
+                case 69:
+                    bot.Write($"WE HAVE FOUND THE SUS MASTER >{susNum}%> @{chatMessage.Sender} <{susNum}%<");
+                    break;
+                case < 75:
+                    bot.Write($"@{chatMessage.Sender} you like to buy large quantities of lube and whipped cream (probably ({susNum}%))");
+                    break;
+                case < 100:
+                    bot.Write($"@{chatMessage.Sender} sus confirmed at a dangerous level !!{susNum}%!!");
+                    break;
+                case 100:
+                    bot.Write($"SUS LEVELS ARE MAXED OUT QUICK @{chatMessage.Sender} MUST BE STOPPED {susNum}%");
+                    break;
+                default:
+                    bot.Write($"Uhm... no sus? BROKEN CODE");
+                    break;
             }
         }
 
@@ -397,91 +308,6 @@ class Program
         static void saveFlashbangCounter(string filePath, int amt)
         {
 
-            if (File.Exists(filePath)) { File.Delete(filePath); }
-
-            using (var f = File.Open(filePath, FileMode.Create))
-            {
-                using (var w = new BinaryWriter(f, System.Text.Encoding.UTF8, false))
-                {
-                    w.Write(amt);
-                }
-            }
-        }
-
-        // Shares Warzone Mobile ID
-        static void WarzoneMobileID(TwitchChatMessage chatMessage)
-        {
-            bot.Write("NAFIAUS#6328340");
-        }
-
-        // Checks to see if chatter is first time chatter
-        static void GetFirstTime(TwitchChatMessage chatMessage)
-        {
-            if (chatMessage.IsFirstMessage == "True")
-            {
-                bot.Write($"Welcome {chatMessage.Sender} to the stream! I hope you enjoy your stay. You can get a list of commands by using \"!commands\"");
-            }
-        }
-
-        // Give Commands
-        static void GiveCommands(TwitchChatMessage chatMessage)
-        {
-            string line = chatMessage.Sender + " you can get a list of commands here: https://discord.gg/Z5ZbqW4h9u";
-            bot.Write(line);
-        }
-
-        // Give Control me Commands
-        static void GiveControls(TwitchChatMessage chatMessage)
-        {
-            string line = chatMessage.Sender + " you can move me up with \"!w\", down with \"!s\", left with \"!a\", or right with \"!d\". Shoot my gun with \"!leftclick\", aim with \"!rightclick\". Switch weapons[Fortnite] with \"!1-5\" for melee \"!f\"";
-            bot.Write(line);
-        }
-        // Deez Nuts Yo
-        static void DeezNutsYo(TwitchChatMessage chatMessage)
-        {
-            string line = chatMessage.Sender + " Yo Deez Nuts in your mouth, Got Em\' Kappa";
-            bot.Write(line);
-        }
-
-        // Daddy Chill
-        static void DaddyChill(TwitchChatMessage chatMessage)
-        {
-            string line = "Daddy Chill... <3";
-            bot.Write(line);
-        }
-
-        // This function plugs my Discord
-        static void PlugDiscord(TwitchChatMessage chatMessage)
-        {
-            string line = "THE DISCORD LINK! ---> https://discord.gg/zCFh23dXvW <--- click to join! Make sure to react \"Thumbs Up\" in the Rules!";
-            bot.Write(line);
-        }
-        // This function is a Troll Function
-        static void ClaimNuts(TwitchChatMessage chatMessage)
-        {
-            string line = chatMessage.Sender + " Has Claimed Deez Nuts \U0001f95c Got Em'";
-            bot.Write(line);
-        }
-
-        // This function is a Troll Function
-        static void ActivateNuts(TwitchChatMessage chatMessage)
-        {
-            string line = chatMessage.Sender + " Has Activated Deez Nuts \U0001f95c Got Em'";
-            bot.Write(line);
-        }
-
-        // This function is for plugging my YouTube Channel
-        static void PlugYT(TwitchChatMessage chatMessage)
-        {
-            string line = "Subscribe to My YouTube! https://m.youtube.com/channel/UCvDQj2yZ-yHTFheHlSMQang";
-            bot.Write(line);
-        }
-
-        // This function grabs the current local time
-        static void GetTime(TwitchChatMessage chatMessage)
-        {
-            DateTime now = DateTime.Now;
-            bot.Write(now.ToString());
         }
 
         // This function grabs you color in chat
@@ -592,6 +418,7 @@ class Program
             }
         }
 
+
         static async Task AskGPT(TwitchChatMessage chatMessage)
         {
             string gptVoiceExtension = "wav";
@@ -653,24 +480,244 @@ class Program
 
     static void log(string text)
     {
-        if (!File.Exists(debugFile))
+    }
+
+    static void ControlMe(TwitchChatMessage chatMessage)
+    {
+        string msg = chatMessage.Message;
+        string[] words = msg.Split(' ');
+
+        if (controlMe)
         {
-            using (FileStream fs = new FileStream(debugFile, FileMode.CreateNew))
+            switch (words[0].ToLower())
             {
-                using (StreamWriter w = new StreamWriter(fs))
-                {
-                    w.WriteLine("Created Debug File");
-                }
-            }
-        } else if (File.Exists(debugFile))
-        {
-            using (FileStream fs = new FileStream(debugFile, FileMode.Append))
-            {
-                using (StreamWriter w = new StreamWriter(fs))
-                {
-                    w.WriteLine(text);
-                    Console.WriteLine(text);
-                }
+                case "!up":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_W);
+                    Thread.Sleep(100);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_W);
+                    break;
+                case "!down":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_S);
+                    Thread.Sleep(100);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_S);
+                    break;
+                case "!right":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_D);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_D);
+                    break;
+                case "!left":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_A);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_A);
+                    break;
+                case "!shift":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.SHIFT);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.SHIFT);
+                    break;
+                case "!control":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.LCONTROL);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.LCONTROL);
+                    break;
+                case "!spacebar":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.SPACE);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.SPACE);
+                    break;
+                case "!1":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_1);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_1);
+                    break;
+                case "!2":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_2);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_2);
+                    break;
+                case "!3":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_3);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_3);
+                    break;
+                case "!4":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_4);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_4);
+                    break;
+                case "!5":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_5);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_5);
+                    break;
+                case "!6":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_6);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_6);
+                    break;
+                case "!7":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_7);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_7);
+                    break;
+                case "!8":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_8);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_8);
+                    break;
+                case "!9":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_9);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_9);
+                    break;
+                case "!0":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_0);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_0);
+                    break;
+                case "!a":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_A);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_A);
+                    break;
+                case "!emote":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_B);
+                    Thread.Sleep(100);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_B);
+                    break;
+                case "!c":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_C);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_C);
+                    break;
+                case "!d":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_D);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_D);
+                    break;
+                case "!e":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_E);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_E);
+                    break;
+                case "!f":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_F);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_F);
+                    break;
+                case "!g":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_G);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_G);
+                    break;
+                case "!h":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_H);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_H);
+                    break;
+                case "!i":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_I);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_I);
+                    break;
+                case "!j":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_J);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_J);
+                    break;
+                case "!k":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_K);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_K);
+                    break;
+                case "!l":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_L);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_L);
+                    break;
+                case "!m":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_M);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_M);
+                    break;
+                case "!n":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_N);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_N);
+                    break;
+                case "!o":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_O);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_O);
+                    break;
+                case "!p":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_P);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_P);
+                    break;
+                case "!q":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_Q);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_Q);
+                    break;
+                case "!r":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_R);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_R);
+                    break;
+                case "!s":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_S);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_S);
+                    break;
+                case "!t":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_T);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_T);
+                    break;
+                case "!u":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_U);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_U);
+                    break;
+                case "!v":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_V);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_V);
+                    break;
+                case "!w":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_W);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_W);
+                    break;
+                case "!x":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_X);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_X);
+                    break;
+                case "!y":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_Y);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_Y);
+                    break;
+                case "!z":
+                    inSim.Keyboard.KeyDown(VirtualKeyCode.VK_Z);
+                    Thread.Sleep(3000);
+                    inSim.Keyboard.KeyUp(VirtualKeyCode.VK_Z);
+                    break;
+                case "!leftclick":
+                    inSim.Mouse.LeftButtonDown();
+                    Thread.Sleep(3000);
+                    inSim.Mouse.LeftButtonUp();
+                    break;
+                case "!rightclick":
+                    inSim.Mouse.RightButtonDown();
+                    Thread.Sleep(3000);
+                    inSim.Mouse.RightButtonUp();
+                    break;
+                default:
+                    break;
             }
         }
     }
