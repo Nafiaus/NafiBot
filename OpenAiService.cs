@@ -1,12 +1,13 @@
 using OpenAI_API; // Library OpenAI from OkGoDoIt
-
-
+using Nafi.Secrets;
 
 namespace Nafi.OpenAI
 {
     class OpenAiService
     {
-        const string OPENAI_API_KEY = "API KEY";
+        static Keys Key = new Keys();
+
+        static string OPENAI_API_KEY = Key.OpenAi;
 
         const string GPT_CHAT_MODEL = "gpt-4-turbo-preview";
 
