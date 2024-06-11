@@ -1,3 +1,6 @@
+// This file isn't needed anymore, but only if you use the Nuget Package "Nafi.Util". This is the exact same file in the package
+
+/*
 using System.Net.Sockets;
 
 namespace Nafi.Twitch
@@ -327,3 +330,4 @@ namespace Nafi.Twitch
 
 }
 
+/*
