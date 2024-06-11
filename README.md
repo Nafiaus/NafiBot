@@ -15,6 +15,8 @@ IDEAS ADDED INSTEAD OF A LOGGING METHOD
 - Merged 3 useless function into 1 useless function
 - Enabled YouTube chat the ablility to use camera controls (aka learned javascript & node.js) One second... I LEARNED A NEW LANGUAGE INSTEAD OF ADDING LOGGING METHOD
 - Added a python script that will grab command line arguments from c# app and turn the gpt text into a voice to be played aloud to stream. Yes I learned another new language instead of logging...
+- Removed python and javascript because I hate it.
+- Added the ability to use my keyboard to Twitch
 
 ---------------------------------------------------
 
