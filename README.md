@@ -1,12 +1,8 @@
 # NafiBot
-This is a bot I'm creating for my twitch chat in C#, C++, and JavaScript. I'll be updating this as I add more to it.
-
-I'm removing all javascript and python. they suck IMO I'll update it soon.
-
-Currently to run it you need to go live on youtube, next open cmd and go to server.js root dir and run "node server.js", afterwards go to the website http://localhost:3000 and click the buttons "Authorize", "Get Active Chat", "Start Tracking Chat" in that order, then run the C# application Nafibot.exe and you are set up!
+This is a bot I'm creating for my twitch chat in C#, C++
 
 How it works:
-  After starting all the applications will connect to their targets and start listening. If a message is sent on Twitch, the camera controller will parse the message and look for cam commands, and nafibot will look for nafibot commands and they both will execute commands if found. If the message is sent on youtube, a node server will parse the message and see if any cam commands are sent and if so then it will forward the message to twitch chat through nafibot. The camera will pick up the message then execute the command.
+  After starting all the applications will connect to their targets and start listening. If a message is sent on Twitch, the camera controller will parse the message and look for cam commands, and nafibot will look for nafibot commands and they both will execute commands if found.
 
 ---------------------------------------------------
 
